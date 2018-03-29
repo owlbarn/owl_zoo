@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package newt;
+
+service Newt {
+  rpc Predict(Request) returns (Response) {}
+}
+
+message Request {
+  string data = 1;
+}
+
+message Response {
+  string data = 1;
+}
+
+/* "string" is the only parameter that needs to be passed in*/
