@@ -1,0 +1,22 @@
+B ../_build/default/bin
+B ../_build/default/src/base
+B ../_build/default/src/owl
+B ../_build/default/src/zoo
+FLG -w -40 -safe-string
+PKG bigarray
+PKG bytes
+PKG compiler-libs
+PKG compiler-libs.bytecomp
+PKG compiler-libs.common
+PKG compiler-libs.toplevel
+PKG ctypes
+PKG ctypes.stubs
+PKG eigen
+PKG integers
+PKG ocaml-compiler-libs.toplevel
+PKG plplot
+PKG str
+PKG unix
+S ../src/base
+S ../src/owl
+S ../src/zoo
