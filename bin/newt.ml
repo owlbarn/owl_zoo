@@ -3,6 +3,7 @@
  * Copyright (c) 2016-2018 Liang Wang <liang.wang@cl.cam.ac.uk>
  *)
 
+open Owl_newt
 open Owl_zoo_cmd
 
 

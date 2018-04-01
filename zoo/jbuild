@@ -1,8 +1,8 @@
 (jbuild_version 1)
 
 (library (
-  (name owl_zoo)
-  (public_name owl_zoo)
+  (name owl_newt)
+  (public_name owl_newt)
   (wrapped true)
   (modes (byte))
   (flags (:standard -safe-string))
