@@ -43,3 +43,12 @@ let replace a b idx =
 
 let join ?(delim=" ") arr =
   String.concat delim (Array.to_list arr)
+
+(* TODO: improve it *)
+let mk_temp_dir () =
+  let rand_num = Random.int 1000000 |> string_of_int in
+  let tmp_dir = Filename.get_temp_dir_name () ^ "/" ^ rand_num in
+  try
+    Unix.mkdir tmp_dir 0o600;
+    tmp_dir
+  with _ -> raise (Sys_error "Cannot create temp dir")

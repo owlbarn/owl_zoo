@@ -33,4 +33,4 @@ let text_of_string typ x =
   | _    -> failwith "unsupported text type"
 
 
-type backend = CONTAINER | JS
+type backend = CONTAINER_REST | CONTAINER_RPC | JS

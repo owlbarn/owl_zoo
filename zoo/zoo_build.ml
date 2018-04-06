@@ -1,14 +1,10 @@
-(* module type Sig = sig
+module B = Owl_newt.Backends.Container_REST
 
-  val build_exec : string -> unit
-
-  val wrap: unit -> unit
-
-  val publish: unit -> unit
-
-end *)
-
-(* module B = Owl_newt.Backend.Container.REST
+let collect_source_files = ()
 
 let build gist =
-  B.(build_exec gist |> wrap |> publish) *)
+  let temp_dir = collect_source_files gist in
+  B.preprocess temp_dir;
+  B.gen_build_file temp_dir;
+  B.build_exec temp_dir;
+  B.wrap temp_dir
