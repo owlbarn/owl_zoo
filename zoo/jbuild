@@ -8,6 +8,7 @@
   (flags (:standard -safe-string))
   (libraries (
     owl
+    yojson
     ocaml-compiler-libs.toplevel
   ))
 ))

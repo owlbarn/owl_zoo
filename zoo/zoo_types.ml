@@ -31,3 +31,6 @@ let text_of_string typ x =
   | "EN" -> ENT x
   | "CN" -> CNT x
   | _    -> failwith "unsupported text type"
+
+
+type backend = CONTAINER | JS
