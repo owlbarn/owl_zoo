@@ -53,14 +53,14 @@ let mk_temp_dir ?(mode=0o700) ?dir pat =
   | Some d -> d
   | None   -> Filename.get_temp_dir_name ()
   in
+  let raise_err msg = raise (Sys_error msg) in
   let rec loop count =
-    if count < 0 then Owl_log.error "mk_temp_dir: too many failing attemps" else
+    if count < 0 then raise_err "mk_temp_dir: too many failing attemps" else
     let dir = Printf.sprintf "%s/%s%s" dir pat (rand_digits ()) in
-    try Ok (Unix.mkdir dir mode; dir) with
+    try (Unix.mkdir dir mode; dir) with
     | Unix.Unix_error (Unix.EEXIST, _, _) -> loop (count - 1)
     | Unix.Unix_error (Unix.EINTR, _, _)  -> loop count
-    | Unix.Unix_error (e, _, _)           -> Owl_log.error (Unix.error_message e)
+    | Unix.Unix_error (e, _, _)           ->
+      raise_err ("mk_temp_dir: " ^ (Unix.error_message e))
   in
-  match loop 100 with
-  | Ok dir as r  -> r
-  | Error _ as e -> e
+  loop 1000
