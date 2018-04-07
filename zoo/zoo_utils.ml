@@ -44,11 +44,23 @@ let replace a b idx =
 let join ?(delim=" ") arr =
   String.concat delim (Array.to_list arr)
 
-(* TODO: improve it *)
-let mk_temp_dir () =
-  let rand_num = Random.int 1000000 |> string_of_int in
-  let tmp_dir = Filename.get_temp_dir_name () ^ "/" ^ rand_num in
-  try
-    Unix.mkdir tmp_dir 0o600;
-    tmp_dir
-  with _ -> raise (Sys_error "Cannot create temp dir")
+let rand_digits () =
+  let rand = Random.State.(bits (make_self_init ()) land 0xFFFFFF) in
+  Printf.sprintf "%06x" rand
+
+let mk_temp_dir ?(mode=0o700) ?dir pat =
+  let dir = match dir with
+  | Some d -> d
+  | None   -> Filename.get_temp_dir_name ()
+  in
+  let rec loop count =
+    if count < 0 then Owl_log.error "mk_temp_dir: too many failing attemps" else
+    let dir = Printf.sprintf "%s/%s%s" dir pat (rand_digits ()) in
+    try Ok (Unix.mkdir dir mode; dir) with
+    | Unix.Unix_error (Unix.EEXIST, _, _) -> loop (count - 1)
+    | Unix.Unix_error (Unix.EINTR, _, _)  -> loop count
+    | Unix.Unix_error (e, _, _)           -> Owl_log.error (Unix.error_message e)
+  in
+  match loop 100 with
+  | Ok dir as r  -> r
+  | Error _ as e -> e
