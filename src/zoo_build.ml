@@ -1,4 +1,4 @@
-(*module B = Owl_newt.Backends.Container_REST *)
+module B = Zoo_backend_crest
 
 (* assumes no file name collision among different gists and no subdir *)
 
@@ -48,9 +48,7 @@ let collect_source_files gist =
 let build gist =
   let temp_dir = collect_source_files gist in
 
-  (* B.preprocess temp_dir;
+  B.preprocess temp_dir;
   B.gen_build_file temp_dir;
   B.build_exec temp_dir;
-  B.wrap temp_dir *)
-
-  ()
+  B.wrap temp_dir

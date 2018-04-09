@@ -1,5 +1,7 @@
 (jbuild_version 1)
 
+(copy_files# backends/*)
+
 (library (
   (name owl_newt)
   (public_name owl_newt)
