@@ -18,7 +18,7 @@ let rec _extract_zoo_gist f added =
   with Not_found -> ()
 
 
-and _download_gist gid vid =
+and download_gist gid vid =
   if (Owl_zoo_ver.exist gid vid) = true then
     Owl_log.info "owl_zoo: %s/%s cached" gid vid
   else (
@@ -65,7 +65,7 @@ and process_dir_zoo ?added gist =
   in
   if Hashtbl.mem added gist' = false then (
     Hashtbl.add added gist' gist';
-    _download_gist gid vid;
+    download_gist gid vid;
     _dir_zoo_ocaml gid vid added
   )
 

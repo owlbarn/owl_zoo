@@ -5,3 +5,6 @@
 
 val add_dir_zoo : unit -> unit
 (** Add directive "zoo" to OCaml toploop. *)
+
+val download_gist : string -> string -> unit
+(** Download gist of gid/vid to the Zoo directory *)
