@@ -1,3 +1,25 @@
+module Dict = struct
+
+  type key = string
+  type 'a dict = (key * 'a) list
+
+  let make() : 'a dict = []
+
+  let insert (d : 'a dict) (k : key) (x : 'a) : 'a dict = (k, x) :: d
+
+  exception NotFound
+
+  let rec lookup (d : 'a dict) (k : key) : 'a =
+  match d with
+  | [] -> raise NotFound
+  | (k', x) :: rest -> if k = k' then x else lookup rest k
+
+  let map (f : 'a -> 'b) (d : 'a dict) =
+    List.map (fun (k, a) -> (k, f a)) d
+
+end
+
+
 let save_file file string =
   let channel = open_out file in
   output_string channel string;
@@ -65,7 +87,7 @@ let mk_temp_dir ?(mode=0o700) ?dir pat =
   in
   loop 1000
 
-let get_funame s = 
+let get_funame s =
   let lst = String.split_on_char '.' s in
   List.nth lst 1
 

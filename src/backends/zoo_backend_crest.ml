@@ -182,7 +182,7 @@ ENTRYPOINT [\"./_build/default/server.bc\"]
 in
 save_file "Dockerfile" output_str
 
-let generate_jbuild () =
+let generate_jbuild dir =
   let output_str = "
 (jbuild_version 1)
 
@@ -191,20 +191,20 @@ let generate_jbuild () =
   (libraries (owl owl_zoo lwt cohttp.lwt cohttp-lwt-unix))))
 "
   in
-  save_file "jbuild" output_str
+  save_file (dir ^ "jbuild") output_str
 
 
 let preprocess dir =
   let cmd = Printf.sprintf "find %s -name \"*.ml\" -exec sed -i '/^#/d' {}" dir in
-  Sys.command(cmd);()
+  Sys.command(cmd) |> ignore
 
-let gen_build_file dir =
+let gen_build_file dir gist =
   generate_server "service.json";
-  generate_dockerfile "";
-  generate_jbuild ()
+  generate_dockerfile gist;
+  generate_jbuild dir
 
 let build_exec dir =
-  Sys.command("jbuilder build server.bc")
+  Sys.command("cd dir && jbuilder build server.bc")
 
 let wrap dir name =
   Sys.command("docker build -t " ^ name );

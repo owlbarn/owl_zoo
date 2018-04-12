@@ -1,6 +1,6 @@
 type img =
   | PPM of string
-  | GEN of string
+  | JPG of string
 
 type text =
   | CNT of string
@@ -14,12 +14,12 @@ type voice =
 let string_of_img x =
   match x with
   | PPM a -> a
-  | GEN a -> a
+  | JPG a -> a
 
 let img_of_string x typ =
   match typ with
    | "ppm" -> PPM x
-   | _     -> GEN x
+   | _     -> JPG x
 
 let string_of_text x =
   match x with

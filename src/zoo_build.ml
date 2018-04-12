@@ -36,8 +36,7 @@ and process_dir_zoo ?added gist dir =
         extract_zoo_gist f added dir
       );
 
-    let cmd = Printf.sprintf "find ~/.owl/zoo/%s -iname '*' -exec cp {} %s"
-      gist' dir in
+    let cmd = Printf.sprintf "cp ~/.owl/zoo/%s/* %s" gist' dir in
     Sys.command cmd |> ignore;
   )
 
@@ -49,6 +48,6 @@ let collect_source_files gist =
 let build gist =
   let temp_dir = collect_source_files gist in
   B.preprocess temp_dir;
-  B.gen_build_file temp_dir;
+  B.gen_build_file temp_dir gist;
   B.build_exec temp_dir;
   B.wrap temp_dir
