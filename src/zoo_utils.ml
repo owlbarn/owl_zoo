@@ -64,3 +64,11 @@ let mk_temp_dir ?(mode=0o700) ?dir pat =
       raise_err (Unix.error_message e)
   in
   loop 1000
+
+let get_funame s = 
+  let lst = String.split_on_char '.' s in
+  List.nth lst 1
+
+let divide_lst lst =
+  List.(lst |> rev |> tl |> rev),
+  List.(lst |> rev |> hd)
