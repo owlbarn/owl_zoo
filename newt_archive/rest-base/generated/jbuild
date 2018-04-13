@@ -1,6 +1,0 @@
-
-(jbuild_version 1)
-
-(executable
- ((name server)
-  (libraries (owl owl_zoo lwt cohttp.lwt cohttp-lwt-unix))))
