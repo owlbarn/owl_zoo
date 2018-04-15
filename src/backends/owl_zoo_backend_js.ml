@@ -1,4 +1,4 @@
-open Zoo_utils
+open Owl_zoo_utils
 
 let generate_jbuild dir name =
   let output_str = Printf.sprintf "

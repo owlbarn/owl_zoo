@@ -1,4 +1,4 @@
-open Zoo_utils
+open Owl_zoo_utils
 
 
 let conf_name = "service.json"

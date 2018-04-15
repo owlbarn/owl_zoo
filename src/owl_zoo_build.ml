@@ -1,4 +1,5 @@
-module B = Zoo_backend_crest
+module B = Owl_zoo_backend_crest
+open Owl_zoo_utils
 
 (* assumes no file name collision among different gists and no subdir *)
 
@@ -41,7 +42,7 @@ and process_dir_zoo ?added gist dir =
   )
 
 let collect_source_files gist =
-  let tmp_dir = Zoo_utils.mk_temp_dir "newt" in
+  let tmp_dir = mk_temp_dir "newt" in
   process_dir_zoo gist tmp_dir;
   tmp_dir
 
@@ -49,5 +50,5 @@ let build gist =
   let temp_dir = collect_source_files gist in
   B.preprocess temp_dir;
   B.gen_build_file temp_dir gist;
-  B.build_exec temp_dir;
+  B.build_exec temp_dir |> ignore;
   B.wrap temp_dir
