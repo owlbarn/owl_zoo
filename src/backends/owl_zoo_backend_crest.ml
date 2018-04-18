@@ -3,84 +3,89 @@ open Owl_zoo_utils
 
 let decode t =
   match t with
-  | "int"     -> fun x -> "int_of_string " ^ x.(0) ^ " in"
-  | "float"   -> fun x -> "float_of_string" ^ x.(0) ^ " in"
+  | "int"     -> fun x -> "int_of_string " ^ x.(0)
+  | "float"   -> fun x -> "float_of_string" ^ x.(0)
   | "string"  -> fun x -> x.(0) ^ " in"
-  | "ndarray" -> fun x -> Printf.sprintf "decode_base64_string %s in" x.(0)
+  | "ndarray" -> fun x -> Printf.sprintf "decode_base64_string %s" x.(0)
   | "img"     -> fun x -> Printf.sprintf
-    "decode_base64 %s %s |> ignore;\nlet %s = img_of_string %s \"\" in"
+    "decode_base64 %s %s;\nlet %s = img_of_string %s \"\""
     x.(0) x.(1) x.(0) x.(0)
-  | "text"    -> fun x -> x.(0) ^ " |> text_of_string in"
+  | "text"    -> fun x -> x.(0) ^ " |> text_of_string"
   | _         -> failwith "unsupported type"
 
 let encode t =
   match t with
-  | "int"     -> fun x -> "string_of_int " ^ x^ " in"
-  | "float"   -> fun x -> "string_of_float " ^ x ^ " in"
-  | "string"  -> fun x -> x ^ " in"
-  | "ndarray" -> fun x -> Printf.sprintf "%s |> save_file_byte |> encode_base64 in" x
-  | "text"    -> fun x -> x ^ "|> string_of_text in"
+  | "int"     -> fun x -> "string_of_int " ^ x
+  | "float"   -> fun x -> "string_of_float " ^ x
+  | "string"  -> fun x -> x
+  | "ndarray" -> fun x -> Printf.sprintf "%s |> save_file_byte |> encode_base64" x
+  | "text"    -> fun x -> x ^ " |> string_of_text"
   | _         -> failwith "unsupported type"
 
 
+let gen_single_param decoded n =
+  Printf.sprintf "let t%d, v%d = params.(%d) in\n" n n n ^
+  Printf.sprintf "let v%d = %s in\n" n decoded, 1
 
-let generate_server json_file =
+let gen_two_params decoded n =
+  Printf.sprintf "let t%d, v%d = params.(%d) in\n" n n n ^
+  Printf.sprintf "let t%d, v%d = params.(%d) in\n" (n + 1) (n + 1) (n + 1)  ^
+  Printf.sprintf "%s in\n"
 
-let json_lst = Yojson.Basic.from_file json_file
-    |> Yojson.Basic.Util.to_assoc
-    |> List.map filter_str
-in
+let gen_lst_params typ n = ()
 
-let f_str = ref "" in
-List.iteri (fun i (a, _) ->
-  f_str := !f_str ^ "let fn" ^ (string_of_int i)
-    ^ " = " ^ a ^ "\n"
-) json_lst;
 
-let branch_str = ref "" in
-List.iteri (fun i (n, t) ->
-  let c = ref 0 in
-  let func_str = ref "" in
-  let vars = ref "" in
-  let th, tl = divide_lst t in
+let gen_str typ n =
+  if (typ <> "img" && typ <> "voice") then (
+    let decoded = decode typ [|"v" ^ (string_of_int n)|] in
+    gen_single_param decoded n
+  ) else if () (
+    let decoded = decode typ [|"v" ^ (string_of_int n);
+      "v" ^ (string_of_int (n+1))|] in
+    gen_two_params decoded n
+  ) else {
+    let sub_typ = get_sub_type typ in
+    gen_lst_params sub_typ n
+  }
 
-  List.iter (fun typ ->
-    let p_str =
-      if (typ <> "img" && typ <> "voice") then (
-        vars := !vars ^ (Printf.sprintf " v%d" !c);
-        Printf.sprintf "let t%d, v%d = params.(%d) in\n" !c !c !c ^
-        Printf.sprintf "let v%d = %s\n" !c (decode typ [|"v" ^ (string_of_int !c)|])
-      ) else (
-        vars := !vars ^ Printf.sprintf " v%d" !c;
-        c := !c + 1;
-        Printf.sprintf "let t%d, v%d = params.(%d) in\n" (!c - 1) (!c - 1) (!c - 1)^
-        Printf.sprintf "let t%d, v%d = params.(%d) in\n" !c !c !c  ^
-        Printf.sprintf "%s\n" (decode typ
-            [|"v" ^ (string_of_int (!c - 1) ); "v" ^ (string_of_int !c)|])
-      ) in
-    c := !c + 1;
-    func_str := !func_str ^ p_str
-  ) th;
+let generate_server config_file =
 
-  let header = "| \"/predict/" ^ (get_funame n) ^ "\" -> \n" ^
-    "let params = param_str uri " ^ (string_of_int !c) ^ " in\n" in
-  let foot =  "let result = " ^ n ^ !vars ^
-    " in\nlet result = " ^ (encode tl "result") ^
-    "\nServer.respond_string ~status:`OK ~body:(result ^ \"\") ()\n\n"
+  let fun_lst = Yojson.Basic.from_file config_file
+      |> Yojson.Basic.Util.to_assoc
+      |> List.map filter_str
   in
-  branch_str := !branch_str ^ header ^ !func_str ^ foot;
-) json_lst;
 
-let output_string =
+  let branch_str = ref "" in
+  List.iteri (fun i (n, t) ->
+    let c = ref 0 in
+    let func_str = ref "" in
+    let vars = ref "" in
+    let th, tl = divide_lst t in
+
+    List.iter (fun typ ->
+      vars := !vars ^ (Printf.sprintf " v%d" !c);
+      let p_str, pc = gen_str typ !c in
+      c := !c + pc;
+      func_str := !func_str ^ p_str
+    ) th;
+
+    let header = "| \"/predict/" ^ (get_funame n) ^ "\" -> \n" ^
+      "let params = param_str uri " ^ (string_of_int !c) ^ " in\n" in
+    let footer =  "let result = " ^ n ^ !vars ^
+      " in\nlet result = " ^ (encode tl "result") ^
+      " in\nServer.respond_string ~status:`OK ~body:(result ^ \"\") ()\n\n"
+    in
+    branch_str := !branch_str ^ header ^ !func_str ^ footer;
+  ) fun_lst;
+
+  let output_string =
 "open Lwt
 open Cohttp
 open Cohttp_lwt_unix
 open Owl_zoo_types
 
 let port = 9527
-"
-^ !f_str ^
-"
+
 let save_file file string =
   let channel = open_out file in
   output_string channel string;
@@ -110,7 +115,7 @@ let decode_base64 filename bytestr =
   let tmp_byte = Filename.temp_file \"tempbyte\" \".b64\" in
   save_file tmp_byte bytestr;
   let cmd = \"openssl base64 -d -in \" ^ tmp_byte ^ \" -out \" ^ filename in
-  syscall cmd
+  syscall cmd |> ignore
 
 let decode_base64_string bytestr =
   let tmp = Filename.temp_file \"temp\" \".byte\" in
@@ -143,53 +148,47 @@ let server =
 let () = ignore (Lwt_main.run server)
 "
 
-in
-save_file "server.ml" output_string
+  in
+  save_file "server.ml" output_string
 
 
 
 let generate_dockerfile gist  =
-(*
-if ( Array.length Sys.argv < 2) then
-  (failwith "Usage: generate Dockerfile based on gist id");
+  let output_str = "
+  #FROM ryanrhymes/owl
+  FROM matrixanger/zoo-base
+  MAINTAINER John Smith
 
-let gid = Sys.argv.(1) in
-*)
-let output_str = "
-#FROM ryanrhymes/owl
-FROM matrixanger/zoo-base
-MAINTAINER John Smith
+  RUN opam install -y lwt cohttp cohttp-lwt-unix yojson jbuilder
 
-RUN opam install -y lwt cohttp cohttp-lwt-unix yojson jbuilder
+  RUN apt-get update -y \\
+      && apt-get -y install wget imagemagick
 
-RUN apt-get update -y \\
-    && apt-get -y install wget imagemagick
+  RUN mkdir /service
+  WORKDIR /service
 
-RUN mkdir /service
-WORKDIR /service
+  COPY server.ml jbuild /service/
 
-COPY server.ml jbuild /service/
+  ENV GIST " ^ gist ^ "
+  RUN owl -run " ^ gist ^ " \\
+      && find ~/.owl/zoo -iname '*' -exec cp \\{\\} . \\; \\
+      && find . -name \"*.ml\" -exec sed -i '/^#/d' \\{\\} \\;
 
-ENV GIST " ^ gist ^ "
-RUN owl -run " ^ gist ^ " \\
-    && find ~/.owl/zoo -iname '*' -exec cp \\{\\} . \\; \\
-    && find . -name \"*.ml\" -exec sed -i '/^#/d' \\{\\} \\;
+  RUN eval `opam config env` && jbuilder build server.bc
 
-RUN eval `opam config env` && jbuilder build server.bc
-
-ENTRYPOINT [\"./_build/default/server.bc\"]
-"
-in
-save_file "Dockerfile" output_str
+  ENTRYPOINT [\"./_build/default/server.bc\"]
+  "
+  in
+  save_file "Dockerfile" output_str
 
 let generate_jbuild dir =
   let output_str = "
-(jbuild_version 1)
+  (jbuild_version 1)
 
-(executable
- ((name server)
-  (libraries (owl owl_zoo lwt cohttp.lwt cohttp-lwt-unix))))
-"
+  (executable
+   ((name server)
+    (libraries (owl owl_zoo lwt cohttp.lwt cohttp-lwt-unix))))
+  "
   in
   save_file (dir ^ "jbuild") output_str
 
