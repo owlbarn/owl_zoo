@@ -1,36 +1,56 @@
-type img =
-  | PPM of string
-  | JPG of string
+type png
+type jpeg
+type ppm
 
-type text =
-  | CNT of string
-  | ENT of string
+type en
+type fr
 
-type voice =
-  | ENV of string
-  | CNV of string
+type _ img =
+  | PNG : string -> png  img
+  | JPG : string -> jpeg img
+  | PPM : string -> ppm  img
 
-(** tools for service developer *)
-let string_of_img x =
+type _ text =
+  | ENT : string -> en text
+  | FRT : string -> fr text
+
+type _ voice =
+  | ENV : string -> en voice
+  | FRV : string -> fr voice
+
+let string_of_img (type el) (x:el img) =
   match x with
-  | PPM a -> a
+  | PNG a -> a
   | JPG a -> a
+  | PPM a -> a
 
-let img_of_string x typ =
-  match typ with
-   | "ppm" -> PPM x
-   | _     -> JPG x
-
-let string_of_text x =
+let string_of_text (type el) (x:el text) =
   match x with
   | ENT a -> a
-  | CNT a -> a
+  | FRT a -> a
 
-let text_of_string typ x =
-  match typ with
-  | "EN" -> ENT x
-  | "CN" -> CNT x
-  | _    -> failwith "unsupported text type"
+let string_of_voice (type el) (x:el voice) =
+  match x with
+  | ENV a -> a
+  | FRV a -> a
+
+type z =
+  | Z_string of string
+  | Z_float of float
+  | Z_int of int
+  | Z_bytes of bytes
+  | Z_bool of bool
+  | Z_ndarray_s of Owl.Dense.Ndarray.S.arr
+  | Z_ndarray_d of Owl.Dense.Ndarray.D.arr
+  | Z_png_img  of png img
+  | Z_jpg_img of jpeg img
+  | Z_ppm_img of ppm img
+  | Z_en_text of en text
+  | Z_fr_text of fr text
+  | Z_en_voice of en voice
+  | Z_fr_voice of fr voice
+  | Z_list of t list
+  | Z_array of t array
 
 
 type backend = CONTAINER_REST | CONTAINER_RPC | JS
