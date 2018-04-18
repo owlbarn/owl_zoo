@@ -11,7 +11,7 @@ let decode t =
     "decode_base64 %s %s;\nlet %s = img_of_string %s \"\""
     x.(0) x.(1) x.(0) x.(0)
   | "text"    -> fun x -> x.(0) ^ " |> text_of_string"
-  | _         -> failwith "unsupported type"
+  | _         -> failwith "decode: unsupported type"
 
 let encode t =
   match t with
@@ -20,7 +20,7 @@ let encode t =
   | "string"  -> fun x -> x
   | "ndarray" -> fun x -> Printf.sprintf "%s |> save_file_byte |> encode_base64" x
   | "text"    -> fun x -> x ^ " |> string_of_text"
-  | _         -> failwith "unsupported type"
+  | _         -> failwith "encode: unsupported type"
 
 
 let gen_single_param decoded n =
@@ -128,7 +128,7 @@ let param_str uri n =
     let p = Uri.get_query_param uri (\"input\" ^ (string_of_int (i + 1))) in
     let p = match p with
       | Some x -> x
-      | None   -> failwith \"invalid input\"
+      | None   -> failwith \"param_str: invalid input\"
     in
     params.(i) <- (t, p)
   ) (Array.make n \"\");
