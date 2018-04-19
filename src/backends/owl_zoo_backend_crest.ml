@@ -6,7 +6,7 @@ let decode t =
     "decode_base64 %s %s;\nlet %s = %s %s \"\""
     x.(0) x.(1) x.(0) typ x.(0)
   in
-  let text_fun typ x = fun x -> typ ^ " " ^ x.(0) in
+  let text_fun typ x = typ ^ " " ^ x.(0) in
   match t with
   | "int"     -> fun x -> "int_of_string " ^ x.(0)
   | "float"   -> fun x -> "float_of_string " ^ x.(0)
@@ -169,14 +169,15 @@ let preprocess dir =
   let cmd = Printf.sprintf "find %s -name \"*.ml\" -exec sed -i '/^#/d' {} \\; " dir in
   Sys.command(cmd) |> ignore
 
-let gen_build_file dir gist =
+let gen_build_files dir gist =
   generate_server dir;
   generate_jbuild dir;
   generate_dockerfile dir gist
 
 let build_exec dir =
   let cmd = Printf.sprintf "(cd %s; jbuilder build server.bc)" dir in
-  Sys.command cmd |> ignore;
+  Sys.command cmd |> ignore
 
 let postprocess dir name =
-  Sys.command("docker build -t " ^ name ) |> ignore
+  let cmd = Printf.sprintf "(cd %s; docker build -t %s)" dir name in
+  Sys.command cmd |> ignore

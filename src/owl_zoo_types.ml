@@ -35,22 +35,40 @@ let string_of_voice (type el) (x:el voice) =
   | FRV a -> a
 
 type z =
-  | Z_string of string
-  | Z_float of float
-  | Z_int of int
-  | Z_bytes of bytes
-  | Z_bool of bool
+  | Z_string    of string
+  | Z_float     of float
+  | Z_int       of int
+  | Z_bytes     of bytes
+  | Z_bool      of bool
   | Z_ndarray_s of Owl.Dense.Ndarray.S.arr
   | Z_ndarray_d of Owl.Dense.Ndarray.D.arr
-  | Z_png_img  of png img
-  | Z_jpg_img of jpeg img
-  | Z_ppm_img of ppm img
-  | Z_en_text of en text
-  | Z_fr_text of fr text
-  | Z_en_voice of en voice
-  | Z_fr_voice of fr voice
-  | Z_list of z list
-  | Z_array of z array
+  | Z_png_img   of png img
+  | Z_jpg_img   of jpeg img
+  | Z_ppm_img   of ppm img
+  | Z_en_text   of en text
+  | Z_fr_text   of fr text
+  | Z_en_voice  of en voice
+  | Z_fr_voice  of fr voice
+  | Z_list      of z list
+  | Z_array     of z array
 
+type backend =
+  | CONTAINER_REST of string
+  | CONTAINER_RPC  of string
+  | JS             of string
 
-type backend = CONTAINER_REST | CONTAINER_RPC | JS
+module type Backend_Sig = sig
+
+  (** preprocess dir *)
+  val preprocess : string -> unit
+
+  (** gen_build_files dir gist *)
+  val gen_build_files : string -> string -> unit
+
+  (** build_exec dir *)
+  val build_exec : string -> unit
+
+  (** wrap dir name -> a string of id *)
+  val postprocess : string -> string -> unit
+
+end
