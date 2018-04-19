@@ -19,11 +19,42 @@ module Dict = struct
 
 end
 
+let syscall cmd =
+  let ic, oc = Unix.open_process cmd in
+  let buf = Buffer.create 16 in
+  (try
+     while true do
+       Buffer.add_channel buf ic 1
+     done
+   with End_of_file -> ());
+  Unix.close_process (ic, oc) |> ignore;
+  (Buffer.contents buf)
 
 let save_file file string =
   let channel = open_out file in
   output_string channel string;
   close_out channel
+
+let save_file_byte data =
+  let tmp = Filename.temp_file "temp" "byte" in
+  Owl_utils.marshal_to_file data tmp;
+  tmp
+
+let encode_base64 filename =
+  let cmd = "openssl base64 -in " ^ filename in
+  syscall cmd
+
+let decode_base64 filename bytestr =
+  let tmp_byte = Filename.temp_file "tempbyte" ".b64" in
+  save_file tmp_byte bytestr;
+  let cmd = "openssl base64 -d -in " ^ tmp_byte ^ " -out " ^ filename in
+  syscall cmd |> ignore
+
+let decode_base64_string bytestr =
+  let tmp = Filename.temp_file "temp" ".byte" in
+  decode_base64 tmp bytestr;
+  Owl_utils.marshal_from_file tmp
+
 
 let strip_string s =
   Str.global_replace (Str.regexp "[\r\n\t ]") "" s

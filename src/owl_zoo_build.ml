@@ -49,6 +49,6 @@ let collect_source_files gist =
 let build gist =
   let temp_dir = collect_source_files gist in
   B.preprocess temp_dir;
-  B.gen_build_file temp_dir gist;
-  B.build_exec temp_dir |> ignore;
-  B.wrap temp_dir
+  B.gen_build_files temp_dir gist;
+  B.build_exec temp_dir;
+  B.postprocess temp_dir

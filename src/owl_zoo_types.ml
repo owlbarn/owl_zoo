@@ -49,8 +49,8 @@ type z =
   | Z_fr_text of fr text
   | Z_en_voice of en voice
   | Z_fr_voice of fr voice
-  | Z_list of t list
-  | Z_array of t array
+  | Z_list of z list
+  | Z_array of z array
 
 
 type backend = CONTAINER_REST | CONTAINER_RPC | JS

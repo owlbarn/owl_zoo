@@ -2,24 +2,40 @@ open Yojson
 open Owl_zoo_utils
 
 let decode t =
+  let img_fun typ x = Printf.sprintf
+    "decode_base64 %s %s;\nlet %s = %s %s \"\""
+    x.(0) x.(1) x.(0) typ x.(0)
+  in
+  let text_fun typ x = fun x -> typ ^ " " ^ x.(0) in
   match t with
   | "int"     -> fun x -> "int_of_string " ^ x.(0)
-  | "float"   -> fun x -> "float_of_string" ^ x.(0)
-  | "string"  -> fun x -> x.(0) ^ " in"
+  | "float"   -> fun x -> "float_of_string " ^ x.(0)
+  | "string"  -> fun x -> x.(0)
+  | "bytes"   -> fun x -> "Bytes.of_string " ^ x.(0)
+  | "bool"    -> fun x -> "bool_of_string " ^ x.(0)
   | "ndarray" -> fun x -> Printf.sprintf "decode_base64_string %s" x.(0)
-  | "img"     -> fun x -> Printf.sprintf
-    "decode_base64 %s %s;\nlet %s = img_of_string %s \"\""
-    x.(0) x.(1) x.(0) x.(0)
-  | "text"    -> fun x -> x.(0) ^ " |> text_of_string"
+  | "png_img" -> img_fun "PNG"
+  | "jpeg_img"-> img_fun "JPG"
+  | "ppm_img" -> img_fun "PPM"
+  | "en_text" -> text_fun "ENT"
+  | "fr_text" -> text_fun "FRT"
   | _         -> failwith "unsupported type"
 
 let encode t =
+  let img_fun  x = Printf.sprintf "%s |> string_of_img |> encode_base64" x in
+  let text_fun x = x ^ " |> string_of_text" in
   match t with
   | "int"     -> fun x -> "string_of_int " ^ x
   | "float"   -> fun x -> "string_of_float " ^ x
   | "string"  -> fun x -> x
+  | "bytes"   -> fun x -> "Bytes.to_string " ^ x
+  | "bool"    -> fun x -> "string_of_bool " ^ x
   | "ndarray" -> fun x -> Printf.sprintf "%s |> save_file_byte |> encode_base64" x
-  | "text"    -> fun x -> x ^ " |> string_of_text"
+  | "png_img" -> img_fun
+  | "jpeg_img"-> img_fun
+  | "ppm_img" -> img_fun
+  | "en_text" -> text_fun
+  | "fr_text" -> text_fun
   | _         -> failwith "unsupported type"
 
 
@@ -30,26 +46,27 @@ let gen_single_param decoded n =
 let gen_two_params decoded n =
   Printf.sprintf "let t%d, v%d = params.(%d) in\n" n n n ^
   Printf.sprintf "let t%d, v%d = params.(%d) in\n" (n + 1) (n + 1) (n + 1)  ^
-  Printf.sprintf "%s in\n"
+  Printf.sprintf "%s in\n" decoded, 2
 
-let gen_lst_params typ n = ()
-
+(* TODO *)
+let gen_lst_params typ n = "", 0
 
 let gen_str typ n =
-  if (typ <> "img" && typ <> "voice") then (
+  if (typ <> "png_img" && typ <> "en_voice" && typ <> "list") then (
     let decoded = decode typ [|"v" ^ (string_of_int n)|] in
     gen_single_param decoded n
-  ) else if () (
+  ) else if (typ <> "list") then (
     let decoded = decode typ [|"v" ^ (string_of_int n);
       "v" ^ (string_of_int (n+1))|] in
     gen_two_params decoded n
-  ) else {
-    let sub_typ = get_sub_type typ in
-    gen_lst_params sub_typ n
-  }
+  ) else (
+    (* let sub_typ = get_sub_type typ in *)
+    gen_lst_params typ n
+  )
 
-let generate_server config_file =
+let generate_server dir =
 
+  let config_file = dir ^ "/service.json" in
   let fun_lst = Yojson.Basic.from_file config_file
       |> Yojson.Basic.Util.to_assoc
       |> List.map filter_str
@@ -82,45 +99,11 @@ let generate_server config_file =
 "open Lwt
 open Cohttp
 open Cohttp_lwt_unix
-open Owl_zoo_types
+open Owl_newt
+open Owl_newt.Owl_zoo_utils
+open Owl_newt.Owl_zoo_types
 
 let port = 9527
-
-let save_file file string =
-  let channel = open_out file in
-  output_string channel string;
-  close_out channel
-
-let save_file_byte data =
-  let tmp = Filename.temp_file \"temp\" \"byte\" in
-  Owl_utils.marshal_to_file data tmp;
-  tmp
-
-let syscall cmd =
-  let ic, oc = Unix.open_process cmd in
-  let buf = Buffer.create 16 in
-  (try
-     while true do
-       Buffer.add_channel buf ic 1
-     done
-   with End_of_file -> ());
-  Unix.close_process (ic, oc) |> ignore;
-  (Buffer.contents buf)
-
-let encode_base64 filename =
-  let cmd = \"openssl base64 -in \" ^ filename in
-  syscall cmd
-
-let decode_base64 filename bytestr =
-  let tmp_byte = Filename.temp_file \"tempbyte\" \".b64\" in
-  save_file tmp_byte bytestr;
-  let cmd = \"openssl base64 -d -in \" ^ tmp_byte ^ \" -out \" ^ filename in
-  syscall cmd |> ignore
-
-let decode_base64_string bytestr =
-  let tmp = Filename.temp_file \"temp\" \".byte\" in
-  decode_base64 tmp bytestr |> ignore;
-  Owl_utils.marshal_from_file tmp
 
 let param_str uri n =
   let params = Array.make n (\"\", \"\") in
@@ -147,13 +130,11 @@ let server =
 
 let () = ignore (Lwt_main.run server)
 "
-
   in
-  save_file "server.ml" output_string
+  save_file (dir ^ "/server.ml") output_string
 
 
-
-let generate_dockerfile gist  =
+let generate_dockerfile dir gist  =
   let output_str = "
   #FROM ryanrhymes/owl
   FROM matrixanger/zoo-base
@@ -167,19 +148,11 @@ let generate_dockerfile gist  =
   RUN mkdir /service
   WORKDIR /service
 
-  COPY server.ml jbuild /service/
-
-  ENV GIST " ^ gist ^ "
-  RUN owl -run " ^ gist ^ " \\
-      && find ~/.owl/zoo -iname '*' -exec cp \\{\\} . \\; \\
-      && find . -name \"*.ml\" -exec sed -i '/^#/d' \\{\\} \\;
-
-  RUN eval `opam config env` && jbuilder build server.bc
-
+  COPY * /service/
   ENTRYPOINT [\"./_build/default/server.bc\"]
   "
   in
-  save_file "Dockerfile" output_str
+  save_file (dir ^ "/Dockerfile") output_str
 
 let generate_jbuild dir =
   let output_str = "
@@ -187,24 +160,23 @@ let generate_jbuild dir =
 
   (executable
    ((name server)
-    (libraries (owl owl_zoo lwt cohttp.lwt cohttp-lwt-unix))))
+    (libraries (owl owl_newt lwt cohttp.lwt cohttp-lwt-unix))))
   "
   in
-  save_file (dir ^ "jbuild") output_str
-
+  save_file (dir ^ "/jbuild") output_str
 
 let preprocess dir =
-  let cmd = Printf.sprintf "find %s -name \"*.ml\" -exec sed -i '/^#/d' {}" dir in
+  let cmd = Printf.sprintf "find %s -name \"*.ml\" -exec sed -i '/^#/d' {} \\; " dir in
   Sys.command(cmd) |> ignore
 
 let gen_build_file dir gist =
-  generate_server "service.json";
-  generate_dockerfile gist;
-  generate_jbuild dir
+  generate_server dir;
+  generate_jbuild dir;
+  generate_dockerfile dir gist
 
 let build_exec dir =
-  Sys.command("cd dir && jbuilder build server.bc")
+  let cmd = Printf.sprintf "(cd %s; jbuilder build server.bc)" dir in
+  Sys.command cmd |> ignore;
 
-let wrap dir name =
-  Sys.command("docker build -t " ^ name );
-  name
+let postprocess dir name =
+  Sys.command("docker build -t " ^ name ) |> ignore
