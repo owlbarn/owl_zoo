@@ -4,63 +4,58 @@ open Owl_zoo_types
 
 (* assumes no file name collision among different gists and no subdir *)
 
+let rec extract_zoo_gist f added dir =
+  let s = Owl_utils.read_file_string f in
+  let regex = Str.regexp "^#zoo \"\\([0-9A-Za-z]+\\)\"" in
+  try
+    let pos = ref 0 in
+    while true do
+      pos := Str.search_forward regex s !pos;
+      let gist = Str.matched_group 1 s in
+      pos := !pos + (String.length gist);
+      process_dir_zoo ~added gist dir
+    done
+  with Not_found -> ()
+
+
+and process_dir_zoo ?added gist dir =
+  let gid, vid, _, _ = Owl_zoo_ver.parse_gist_string gist in
+  let gist' = Printf.sprintf "%s/%s" gid vid in
+
+  let added = match added with
+    | Some h -> h
+    | None   -> Hashtbl.create 128
+  in
+  if Hashtbl.mem added gist' = false then (
+    Hashtbl.add added gist' gist';
+    Owl_zoo_dir.download_gist gid vid;
+
+    let dir_gist = Owl_zoo_path.gist_path gid vid in
+    Sys.readdir (dir_gist)
+    |> Array.to_list
+    |> List.filter (fun s -> Filename.check_suffix s "ml")
+    |> List.iter (fun l ->
+        let f = Printf.sprintf "%s/%s" dir_gist l in
+        extract_zoo_gist f added dir
+      );
+
+    let cmd = Printf.sprintf "cp ~/.owl/zoo/%s/* %s" gist' dir in
+    Sys.command cmd |> ignore;
+  )
+
+
+let collect_source_files gist =
+  let tmp_dir = mk_temp_dir "newt" in
+  process_dir_zoo gist tmp_dir;
+  tmp_dir
+
+
 module Make
   (B : Backend_Sig)
   = struct
 
-  let rec extract_zoo_gist f added dir =
-    let s = Owl_utils.read_file_string f in
-    let regex = Str.regexp "^#zoo \"\\([0-9A-Za-z]+\\)\"" in
-    try
-      let pos = ref 0 in
-      while true do
-        pos := Str.search_forward regex s !pos;
-        let gist = Str.matched_group 1 s in
-        pos := !pos + (String.length gist);
-        process_dir_zoo ~added gist dir
-      done
-    with Not_found -> ()
-
-
-  and process_dir_zoo ?added gist dir =
-    let gid, vid, _, _ = Owl_zoo_ver.parse_gist_string gist in
-    let gist' = Printf.sprintf "%s/%s" gid vid in
-
-    let added = match added with
-      | Some h -> h
-      | None   -> Hashtbl.create 128
-    in
-    if Hashtbl.mem added gist' = false then (
-      Hashtbl.add added gist' gist';
-      Owl_zoo_dir.download_gist gid vid;
-
-      let dir_gist = Owl_zoo_path.gist_path gid vid in
-      Sys.readdir (dir_gist)
-      |> Array.to_list
-      |> List.filter (fun s -> Filename.check_suffix s "ml")
-      |> List.iter (fun l ->
-          let f = Printf.sprintf "%s/%s" dir_gist l in
-          extract_zoo_gist f added dir
-        );
-
-      let cmd = Printf.sprintf "cp ~/.owl/zoo/%s/* %s" gist' dir in
-      Sys.command cmd |> ignore;
-    )
-
-
-  let collect_source_files gist =
-    let tmp_dir = mk_temp_dir "newt" in
-    process_dir_zoo gist tmp_dir;
-    tmp_dir
-
-
-  let build gist backend =
-
-    let name = match backend with
-      | CONTAINER_REST cname -> cname
-      | CONTAINER_RPC  cname -> cname
-      | JS fname             -> fname
-    in
+  (* Maybe better to change name to a backend type parameter? *)
+  let build gist name =
     let temp_dir = collect_source_files gist in
     B.preprocess temp_dir;
     B.gen_build_files temp_dir gist;

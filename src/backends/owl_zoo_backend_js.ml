@@ -37,14 +37,14 @@ let get_sname dir =
   let n, _ = List.hd json_lst in
   n |> Str.split (Str.regexp ".") |> List.hd |> String.lowercase_ascii
 
-let gen_build_file dir gist =
+let gen_build_files dir gist =
   let name = get_sname dir in
   generate_jbuild dir name
 
-(** build_exec dir *)
+
 let build_exec dir =
   let name = get_sname dir in
   Sys.command(Printf.sprintf "(cd dir; jbuilder build %s.js)" name) |> ignore
 
-(** wrap dir name -> a string of id *)
-let wrap dir name = name
+
+let postprocess dir name = ()
