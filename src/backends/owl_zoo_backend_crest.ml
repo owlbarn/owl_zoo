@@ -111,7 +111,7 @@ let param_str uri n =
     let p = Uri.get_query_param uri (\"input\" ^ (string_of_int (i + 1))) in
     let p = match p with
       | Some x -> x
-      | None   -> failwith \"invalid input\"
+      | None   -> failwith \"param_str: invalid input\"
     in
     params.(i) <- (t, p)
   ) (Array.make n \"\");
