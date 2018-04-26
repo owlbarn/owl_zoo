@@ -8,9 +8,11 @@ Here is the scripts to build the container:
 ```ocaml
 open Owl
 open Owl_newt
+open Owl_zoo_build
 
 let gist = "aa36ee2c93fad476f4a46dc195b6fd89" in
-Owl_zoo_backend.CREST.build gist "alice/squeeznet:latest"
+let backend = CREST {dname = "alice/squeeznet:latest"} in
+build backend gist
 ```
 
 After than, you need to start the container:

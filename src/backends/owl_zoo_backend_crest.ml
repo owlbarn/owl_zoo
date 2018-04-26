@@ -1,6 +1,12 @@
 open Yojson
 open Owl_zoo_utils
 
+module CREST = struct
+
+type backend_typ = {
+  mutable dname: string  (* docker name *)
+}
+
 let decode t =
   let img_fun typ x = Printf.sprintf
     "decode_base64 %s %s;\nlet %s = %s %s \"\""
@@ -181,3 +187,5 @@ let build_exec dir =
 let postprocess dir name =
   let cmd = Printf.sprintf "(cd %s; docker build -t %s)" dir name in
   Sys.command cmd |> ignore
+
+end

@@ -1,6 +1,7 @@
 (* module B = Owl_zoo_backend_crest *)
 open Owl_zoo_utils
 open Owl_zoo_types
+open Owl_zoo_backend
 
 (* assumes no file name collision among different gists and no subdir *)
 
@@ -50,16 +51,31 @@ let collect_source_files gist =
   tmp_dir
 
 
-module Make
-  (B : Backend_Sig)
-  = struct
+type backend =
+  | CREST of CREST.backend_typ
+  | JS    of JS.backend_typ
 
-  (* Maybe better to change name to a backend type parameter? *)
-  let build gist name =
-    let temp_dir = collect_source_files gist in
-    B.preprocess temp_dir;
-    B.gen_build_files temp_dir gist;
-    B.build_exec temp_dir;
-    B.postprocess temp_dir name
+let preprocess = function
+  | CREST _ -> CREST.preprocess
+  | JS    _ -> JS.preprocess
 
-end
+let gen_build_files = function
+  | CREST _ -> CREST.gen_build_files
+  | JS    _ -> JS.gen_build_files
+
+let build_exec = function
+  | CREST _ -> CREST.build_exec
+  | JS    _ -> JS.build_exec
+
+let postprocess b d = match b with
+  | CREST n -> CREST.postprocess d n.dname
+  | JS    n -> JS.postprocess d n.fname
+
+let build backend gist =
+  let temp_dir = collect_source_files gist in
+  preprocess backend temp_dir;
+  gen_build_files backend temp_dir gist;
+  build_exec backend temp_dir;
+  postprocess backend temp_dir
+
+let ( $@ ) = build

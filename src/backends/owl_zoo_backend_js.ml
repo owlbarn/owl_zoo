@@ -1,5 +1,11 @@
 open Owl_zoo_utils
 
+module JS = struct
+
+type backend_typ = {
+  mutable fname: string  (* js file name *)
+}
+
 let generate_jbuild dir name =
   let output_str = Printf.sprintf "
   (jbuild_version 1)
@@ -48,3 +54,5 @@ let build_exec dir =
 
 
 let postprocess dir name = ()
+
+end

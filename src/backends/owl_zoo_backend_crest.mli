@@ -1,3 +1,9 @@
+module CREST : sig
+
+type backend_typ = {
+  mutable dname: string  (* docker name *)
+}
+
 val preprocess : string -> unit
 (**
 ``preprocess dir``removes the zoo header from ".ml" files in a ``dir``.
@@ -17,3 +23,5 @@ val postprocess : string -> string -> unit
 (**
 ``postprocess dir name`` runs the docker system command to build a docker container that runs the web server executable.
 *)
+
+end

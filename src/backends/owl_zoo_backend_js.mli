@@ -1,3 +1,9 @@
+module JS : sig
+
+type backend_typ = {
+  mutable fname: string  (* js file name *)
+}
+
 val preprocess : string -> unit
 (**
 ``preprocess dir``removes the zoo header from ".ml" files in a ``dir``, and replace the usage of Owl library to Owl-base.
@@ -17,3 +23,5 @@ val postprocess : string -> string -> unit
 (**
 ``postprocess dir name`` renames the generated JavaScript file.
 *)
+
+end
