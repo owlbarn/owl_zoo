@@ -1,5 +1,6 @@
 open Owl_zoo_utils
 
+(** Consts *)
 
 let conf_name = "service.json"
 let zoo_root  = Owl_zoo_path.dir
@@ -22,6 +23,7 @@ let out_type s =
   let lst = Array.to_list (get_types s) in
   List.(lst |> rev |> hd)
 
+
 (** Core functions *)
 let make_snode name gist types =
   let gists = [|gist|] in
@@ -29,14 +31,15 @@ let make_snode name gist types =
   let graph = Owl_graph.node (name, gist, pn) in
   {gists; types; graph}
 
+let types_from_config config =
+  Yojson.Basic.from_string config
+    |> Yojson.Basic.Util.to_assoc
+    |> List.map filter_str
 
 let make_services gist =
   Owl_zoo_cmd.download_gist gist; (* should use cache if possible *)
   let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
-  let nt_lst = Yojson.Basic.from_string conf_json
-    |> Yojson.Basic.Util.to_assoc
-    |> List.map filter_str
-  in
+  let nt_lst = types_from_config conf_json in
   let services = Array.make (List.length nt_lst)
     (make_snode "" "" [|""|]) in
   List.iteri (fun i (n, t) ->
@@ -46,10 +49,7 @@ let make_services gist =
 
 let get_service_info gist =
   let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
-  let nt_lst = Yojson.Basic.from_string conf_json
-    |> Yojson.Basic.Util.to_assoc
-    |> List.map filter_str
-  in
+  let nt_lst = types_from_config conf_json in
   let info = ref "" in
   List.iteri (fun i (n, t) ->
     info := !info ^
@@ -77,12 +77,11 @@ let generate_conf ?(dir=".") service mname =
   let name = String.capitalize_ascii mname ^ ".main" in
   let types = get_types service |> join ~delim:" -> " in
   let json = `Assoc [(name, `String types)] in
-
   let dir = if dir = "." then Sys.getcwd () else dir in
   Yojson.Basic.to_file (dir ^ "/" ^ conf_name) json
 
 
-(* generate a entry file called mname.ml based on service *)
+(* generate an entry file called mname.ml based on service *)
 let generate_main ?(dir=".") service mname =
   let header = ref "" in
   Array.iter (fun gist ->
@@ -132,12 +131,25 @@ let generate_main ?(dir=".") service mname =
 
 
 let save_service service name =
-  let tmp_dir = Filename.get_temp_dir_name () ^ "/" ^
-    (string_of_int (Random.int 100000)) in
-  Sys.command ("mkdir " ^ tmp_dir) |> ignore;
-
+  let tmp_dir = Owl_zoo_utils.mk_temp_dir "service" in
   generate_main ~dir:tmp_dir service name;
   generate_conf ~dir:tmp_dir service name;
   save_file (tmp_dir ^ "/readme.md") name;
   let gist = Owl_zoo_cmd.upload_gist tmp_dir in
   gist
+
+
+(** Compose operations *)
+
+(* "->" : raise error if two services are not compatible *)
+let connect_service ?(name="") s1 s2 idx =
+  (* manual type check *)
+  assert (Array.mem (out_type s1) (in_types s2)); (* incompatible service type *)
+  assert (out_type s1 = (Array.get (in_types s2) idx)); (* incompatible argement type *)
+
+  let gists = merge_array (get_gists s1) (get_gists s2) in
+  let types = replace (get_types s2) (in_types s1) idx in
+  let graph = get_graph s2 in
+  let graph_cld = get_graph s1 in
+  Owl_graph.connect [|graph|] [|graph_cld|];
+  {gists; types; graph}
