@@ -143,15 +143,24 @@ let save_service service name =
 
 (** Compose operations *)
 
-(* "->" : raise error if two services are not compatible *)
-let connect_service ?(name="") s1 s2 idx =
+let connect_service ?(name="") inputlist output =
   (* manual type check *)
-  assert (Array.mem (out_type s1) (in_types s2)); (* incompatible service type *)
-  assert (out_type s1 = (Array.get (in_types s2) idx)); (* incompatible argement type *)
+  let connect_two s1 s2 idx =
+    assert (Array.mem (out_type s1) (in_types s2)); (* incompatible service type *)
+    assert (out_type s1 = (Array.get (in_types s2) idx)); (* incompatible argement type *)
 
-  let gists = merge_array (get_gists s1) (get_gists s2) in
-  let types = replace (get_types s2) (in_types s1) idx in
-  let graph = get_graph s2 in
-  let graph_cld = get_graph s1 in
-  Owl_graph.connect [|graph|] [|graph_cld|];
-  {gists; types; graph}
+    let gists = merge_array (get_gists s1) (get_gists s2) in
+    let types = replace (get_types s2) (in_types s1) idx in
+    let graph = get_graph s2 in
+    let graph_cld = get_graph s1 in
+    Owl_graph.connect [|graph|] [|graph_cld|];
+    {gists; types; graph}
+  in
+
+  let len = List.length inputlist in
+  let input_rev = List.rev inputlist in
+  let result = ref output in
+  List.iteri (fun i x ->
+    result := connect_two x !result (len - 1 - i);
+  ) input_rev;
+  [!result]

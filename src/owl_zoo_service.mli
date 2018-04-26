@@ -7,8 +7,11 @@ type t = {
 
 val make_services : string -> t Owl_zoo_utils.Dict.dict
 
+val connect_service : ?name:string -> t list -> t -> t list
+
+val save_service : t -> string -> string
+
+
 val list_nodes : t -> string
 
 val get_service_info : string -> unit
-
-val save_service : t -> string -> string
