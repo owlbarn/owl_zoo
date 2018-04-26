@@ -15,3 +15,7 @@ val save_service : t -> string -> string
 val list_nodes : t -> string
 
 val get_service_info : string -> unit
+
+
+val ( $> ) : ?name:string -> t list -> t -> t list
+val ( $  ) : string -> t Owl_zoo_utils.Dict.dict

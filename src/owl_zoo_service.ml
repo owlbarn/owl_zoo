@@ -164,3 +164,6 @@ let connect_service ?(name="") inputlist output =
     result := connect_two x !result (len - 1 - i);
   ) input_rev;
   [!result]
+
+let ( $> ) = connect_service
+let ( $  ) = make_services
