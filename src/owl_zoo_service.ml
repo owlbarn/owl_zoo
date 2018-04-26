@@ -32,7 +32,7 @@ let make_snode name gist types =
 
 let make_services gist =
   Owl_zoo_cmd.download_gist gist; (* should use cache if possible *)
-  let conf_json = Owl_zoo_cmd.load_file gist conf_name in
+  let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
   let nt_lst = Yojson.Basic.from_string conf_json
     |> Yojson.Basic.Util.to_assoc
     |> List.map filter_str
@@ -45,7 +45,7 @@ let make_services gist =
   services
 
 let get_service_info gist =
-  let conf_json = Owl_zoo_cmd.load_file gist conf_name in
+  let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
   let nt_lst = Yojson.Basic.from_string conf_json
     |> Yojson.Basic.Util.to_assoc
     |> List.map filter_str
