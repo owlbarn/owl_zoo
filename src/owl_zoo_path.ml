@@ -5,6 +5,7 @@
 
  let dir = Sys.getenv "HOME" ^ "/.owl/zoo"
  let htb = dir ^ "/" ^ "zoo_ver.htb"
+ let conf_name = "service.json"
 
 (* Used internally *)
  let gist_path gid vid =

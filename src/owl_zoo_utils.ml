@@ -3,7 +3,7 @@ module Dict = struct
   type key = string
   type 'a dict = (key * 'a) list
 
-  let make() : 'a dict = []
+  let make () : 'a dict = []
 
   let insert (d : 'a dict) (k : key) (x : 'a) : 'a dict = (k, x) :: d
 

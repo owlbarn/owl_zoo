@@ -2,7 +2,7 @@ open Owl_zoo_utils
 
 (** Consts *)
 
-let conf_name = "service.json"
+let conf_name = Owl_zoo_path.conf_name
 let zoo_root  = Owl_zoo_path.dir
 
 type t = {
@@ -31,21 +31,23 @@ let make_snode name gist types =
   let graph = Owl_graph.node (name, gist, pn) in
   {gists; types; graph}
 
+
 let types_from_config config =
   Yojson.Basic.from_string config
     |> Yojson.Basic.Util.to_assoc
     |> List.map filter_str
 
+
 let make_services gist =
   Owl_zoo_cmd.download_gist gist; (* should use cache if possible *)
   let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
   let nt_lst = types_from_config conf_json in
-  let services = Array.make (List.length nt_lst)
-    (make_snode "" "" [|""|]) in
+  let services = ref (Dict.make ()) in
   List.iteri (fun i (n, t) ->
-    services.(i) <- make_snode n gist (Array.of_list t)
+    services := Dict.insert !services n (make_snode n gist (Array.of_list t))
   ) nt_lst;
-  services
+  !services
+
 
 let get_service_info gist =
   let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
@@ -134,7 +136,7 @@ let save_service service name =
   let tmp_dir = Owl_zoo_utils.mk_temp_dir "service" in
   generate_main ~dir:tmp_dir service name;
   generate_conf ~dir:tmp_dir service name;
-  save_file (tmp_dir ^ "/readme.md") name;
+  save_file (tmp_dir ^ "/#readme.md") name;
   let gist = Owl_zoo_cmd.upload_gist tmp_dir in
   gist
 
