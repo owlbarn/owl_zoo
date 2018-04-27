@@ -5,7 +5,7 @@ type t = {
   mutable graph : (string * string * int) Owl_graph.node;
 }
 
-val make_services : string -> t Owl_zoo_utils.Dict.dict
+val make_services : string -> (string, t) Hashtbl.t
 
 val connect_service : ?name:string -> t list -> t -> t list
 
@@ -18,4 +18,5 @@ val get_service_info : string -> unit
 
 
 val ( $> ) : ?name:string -> t list -> t -> t list
-val ( $  ) : string -> t Owl_zoo_utils.Dict.dict
+val ( $  ) : string -> (string, t) Hashtbl.t
+val ( $~ ) : (string, t) Hashtbl.t -> string -> t

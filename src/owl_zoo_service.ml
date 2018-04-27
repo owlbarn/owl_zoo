@@ -42,11 +42,11 @@ let make_services gist =
   Owl_zoo_cmd.download_gist gist; (* should use cache if possible *)
   let conf_json = Owl_zoo_cmd.load_file ~gist conf_name in
   let nt_lst = types_from_config conf_json in
-  let services = ref (Dict.make ()) in
+  let services = Hashtbl.create 1024 in
   List.iteri (fun i (n, t) ->
-    services := Dict.insert !services n (make_snode n gist (Array.of_list t))
+    Hashtbl.add services n (make_snode n gist (Array.of_list t))
   ) nt_lst;
-  !services
+  services
 
 
 let get_service_info gist =
@@ -165,5 +165,9 @@ let connect_service ?(name="") inputlist output =
   ) input_rev;
   [!result]
 
+
+(** operators *)
+
 let ( $> ) = connect_service
 let ( $  ) = make_services
+let ( $~ ) = Hashtbl.find

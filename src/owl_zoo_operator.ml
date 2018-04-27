@@ -4,6 +4,6 @@ module Operator = struct
 
   let ( $ )  = Owl_zoo_service.make_services
 
-  let ( $~ ) = Owl_zoo_utils.Dict.lookup
+  let ( $~ ) = Hashtbl.find
 
 end
