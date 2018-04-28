@@ -16,9 +16,9 @@ let syscall cmd =
   (Buffer.contents buf)
 
 
-let save_file file string =
+let save_file file str =
   let channel = open_out file in
-  output_string channel string;
+  output_string channel str;
   close_out channel
 
 
@@ -62,7 +62,6 @@ let uniq lst =
   Hashtbl.fold (fun x () xs -> x :: xs) unique_set []
 
 
-(* split([1;2;3;4;5],3) --> [1;2;3], [4;5]*)
 let split n lst =
   let rec aux i acc = function
     | [] -> List.rev acc, []
@@ -84,7 +83,6 @@ let rec remove_nth n = function
     else h :: remove_nth (n-1) t
 
 
-(* replace array a's idx-th elem with array b *)
 let replace a b idx =
   assert (idx >= 0 && idx < (Array.length b));
   let x, y = a |> Array.to_list |> remove_nth idx |> split idx in
