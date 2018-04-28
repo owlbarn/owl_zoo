@@ -1,3 +1,9 @@
+(*
+ * OWL - an OCaml numerical library for scientific computing
+ * Copyright (c) 2016-2017 Liang Wang <liang.wang@cl.cam.ac.uk>
+ *)
+
+
 (* module B = Owl_zoo_backend_crest *)
 open Owl_zoo_utils
 open Owl_zoo_types

@@ -1,3 +1,9 @@
+(*
+ * OWL - an OCaml numerical library for scientific computing
+ * Copyright (c) 2016-2017 Liang Wang <liang.wang@cl.cam.ac.uk>
+ *)
+
+
 open Owl_zoo_backend
 
 val collect_source_files : string -> string

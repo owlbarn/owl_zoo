@@ -1,3 +1,9 @@
+(*
+ * OWL - an OCaml numerical library for scientific computing
+ * Copyright (c) 2016-2017 Liang Wang <liang.wang@cl.cam.ac.uk>
+ *)
+
+
 let syscall cmd =
   let ic, oc = Unix.open_process cmd in
   let buf = Buffer.create 16 in
