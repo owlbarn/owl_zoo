@@ -21,7 +21,7 @@ let generate_jbuild dir name =
              --source-map ${path:%s.bc} -o ${@} --pretty))))
   " name name name
   in
-  save_file (dir ^ "/jbuild") output_str
+  Owl_utils.write_file (dir ^ "/jbuild") output_str
 
 
 let _replace_str a b dir =

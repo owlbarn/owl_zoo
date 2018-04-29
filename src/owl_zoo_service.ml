@@ -135,14 +135,14 @@ let generate_main ?(dir=".") service mname =
     (Printf.sprintf "let main %s =\n%s" p_str !body) in
 
   let dir = if dir = "." then Sys.getcwd () else dir in
-  save_file (dir ^ "/" ^ mname ^ ".ml") output_string
+  Owl_utils.write_file (dir ^ "/" ^ mname ^ ".ml") output_string
 
 
 let save_service service name =
   let tmp_dir = Owl_zoo_utils.mk_temp_dir "service" in
   generate_main ~dir:tmp_dir service name;
   generate_conf ~dir:tmp_dir service name;
-  save_file (tmp_dir ^ "/#readme.md") name;
+  Owl_utils.write_file (tmp_dir ^ "/#readme.md") name;
   let gist = Owl_zoo_cmd.upload_gist tmp_dir in
   gist
 
@@ -156,7 +156,7 @@ let connect_service ?(name="") inputlist output =
     assert (out_type s1 = (Array.get (in_types s2) idx)); (* incompatible argement type *)
 
     let gists = merge_array (get_gists s1) (get_gists s2) in
-    let types = replace (get_types s2) (in_types s1) idx in
+    let types = Owl_utils_array.replace idx 1 (get_types s2) (in_types s1) in
     let graph = get_graph s2 in
     let graph_cld = get_graph s1 in
     Owl_graph.connect [|graph|] [|graph_cld|];

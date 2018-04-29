@@ -3,11 +3,8 @@
  * Copyright (c) 2016-2017 Liang Wang <liang.wang@cl.cam.ac.uk>
  *)
 
- val syscall : string -> string
+val syscall : string -> string
 (** ``syscall cmd`` runs a system command and returns the execution result. *)
-
-val save_file : string -> string -> unit
-(** ``save_file file str`` saves a string ``str`` to a file. *)
 
 val save_file_byte : 'a -> string
 (** ``save_file_byte data`` marshalls data to a temporary file and returns the location of this file. *)
@@ -35,12 +32,6 @@ val split : int -> 'a list -> 'a list * 'a list
 
 val merge_array : 'a array -> 'a array -> 'a array
 (** ``merge_array a b`` merges two arrays. *)
-
-val remove_nth : int -> 'a list -> 'a list
-(** ``remove_nth idx lst`` remove an element according to index ``idx``.*)
-
-val replace : 'a array -> 'a array -> int -> 'a array
-(** ``replace a b idx`` replaces array a's idx-th element with array b. *)
 
 val join : ?delim:string -> string array -> string
 (** ``join ~delim arr`` combines strings in array ``arr`` into one string using delimiter ``delim`` that is default to a whitespace. *)

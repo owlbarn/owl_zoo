@@ -16,12 +16,6 @@ let syscall cmd =
   (Buffer.contents buf)
 
 
-let save_file file str =
-  let channel = open_out file in
-  output_string channel str;
-  close_out channel
-
-
 let save_file_byte data =
   let tmp = Filename.temp_file "temp" "byte" in
   Owl_utils.marshal_to_file data tmp;
@@ -29,15 +23,13 @@ let save_file_byte data =
 
 
 let encode_base64 filename =
-  let cmd = "openssl base64 -in " ^ filename in
-  syscall cmd
+  let s = Owl_utils.read_file_string filename in
+  B64.encode s
 
 
 let decode_base64 filename bytestr =
-  let tmp_byte = Filename.temp_file "tempbyte" ".b64" in
-  save_file tmp_byte bytestr;
-  let cmd = "openssl base64 -d -in " ^ tmp_byte ^ " -out " ^ filename in
-  syscall cmd |> ignore
+  let s = B64.decode bytestr in
+  Owl_utils.write_file filename s
 
 
 let decode_base64_string bytestr =
@@ -74,19 +66,6 @@ let split n lst =
 let merge_array a b =
   Array.append a b |> Array.to_list
   |> uniq |> Array.of_list
-
-
-let rec remove_nth n = function
-  | [] -> []
-  | h :: t ->
-    if n = 0 then t
-    else h :: remove_nth (n-1) t
-
-
-let replace a b idx =
-  assert (idx >= 0 && idx < (Array.length b));
-  let x, y = a |> Array.to_list |> remove_nth idx |> split idx in
-  (x @ (Array.to_list b) @ y) |> Array.of_list
 
 
 let join ?(delim=" ") arr =

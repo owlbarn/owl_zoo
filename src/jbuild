@@ -11,6 +11,7 @@
   (libraries (
     owl
     yojson
+    base64
     ocaml-compiler-libs.toplevel
   ))
 ))
