@@ -17,7 +17,7 @@ build backend gist
 
 After than, you need to start the container:
 ```
-docker --name sqnet -p 9527:9527 -it alice/squeeznet:latest
+docker run --name sqnet -p 9527:9527 -it alice/squeeznet:latest
 ```
 
 Then send requests to the docker. For example, you can use the provided Python script:

@@ -12,8 +12,8 @@ val save_file_byte : 'a -> string
 val encode_base64 : string -> string
 (** ``encode_base64 filename`` encodes a file into base64 code. *)
 
-val decode_base64 : string -> string -> unit
-(** ``decode_base64 filename bytes`` decode base64-coded string into a file of given name. *)
+val decode_base64 : string -> string -> string
+(** ``decode_base64 filename bytes`` decode base64-coded string into a temporary file of the same type as filename; returns the temp file location. *)
 
 val decode_base64_string : string -> 'a
 (** ``decode_base64_string bytes`` decode base64-coded string into a file of given name, and then marshalls from this file. *)

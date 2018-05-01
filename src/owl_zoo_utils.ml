@@ -17,7 +17,7 @@ let syscall cmd =
 
 
 let save_file_byte data =
-  let tmp = Filename.temp_file "temp" "byte" in
+  let tmp = Filename.temp_file "temp" ".byte" in
   Owl_utils.marshal_to_file data tmp;
   tmp
 
@@ -28,13 +28,16 @@ let encode_base64 filename =
 
 
 let decode_base64 filename bytestr =
+  let base = Filename.remove_extension filename in
+  let ext = Filename.extension filename in
+  let tmp = Filename.temp_file base ext in
   let s = B64.decode bytestr in
-  Owl_utils.write_file filename s
+  Owl_utils.write_file tmp s;
+  tmp
 
 
 let decode_base64_string bytestr =
-  let tmp = Filename.temp_file "temp" ".byte" in
-  decode_base64 tmp bytestr;
+  let tmp = decode_base64 "temp64.byte" bytestr in
   Owl_utils.marshal_from_file tmp
 
 

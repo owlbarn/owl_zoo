@@ -9,8 +9,8 @@ type backend_typ = {
 
 let decode t =
   let img_fun typ x = Printf.sprintf
-    "decode_base64 %s %s;\nlet %s = %s %s \"\""
-    x.(0) x.(1) x.(0) typ x.(0)
+    "let %s = decode_base64 %s %s in\nlet %s = %s %s"
+    x.(0) x.(0) x.(1) x.(0) typ x.(0)
   in
   let text_fun typ x = typ ^ " " ^ x.(0) in
   match t with
@@ -143,19 +143,26 @@ let () = ignore (Lwt_main.run server)
 let generate_dockerfile dir gist  =
   let output_str = "
   #FROM ryanrhymes/owl
-  FROM matrixanger/zoo-base
+  FROM matrixanger/owl
   MAINTAINER John Smith
 
-  RUN opam install -y lwt cohttp cohttp-lwt-unix yojson jbuilder
+  RUN opam install -y lwt cohttp cohttp-lwt-unix yojson base64
 
-  RUN apt-get update -y \\
-      && apt-get -y install wget imagemagick
+  RUN cd ~ && git clone https://github.com/owlbarn/owl_zoo.git \\
+      && cd owl_zoo \\
+      && make && make install
 
-  RUN mkdir /service
-  WORKDIR /service
+  RUN sudo apt-get update -y \\
+      && sudo apt-get -y install wget imagemagick
 
-  COPY * /service/
-  ENTRYPOINT [\"./_build/default/server.bc\"]
+  RUN mkdir /home/opam/service
+  WORKDIR /home/opam/service
+
+  COPY * /home/opam/service/
+  RUN sudo chown opam:opam /home/opam/service/*
+  RUN jbuilder build server.bc; exit 0
+  RUN jbuilder build server.bc
+  ENTRYPOINT [\"_build/default/server.bc\"]
   "
   in
   Owl_utils.write_file (dir ^ "/Dockerfile") output_str
@@ -166,7 +173,7 @@ let generate_jbuild dir =
 
   (executable
    ((name server)
-    (libraries (owl owl_newt lwt cohttp.lwt cohttp-lwt-unix))))
+    (libraries (owl owl-zoo owl_newt lwt cohttp.lwt cohttp-lwt-unix))))
   "
   in
   Owl_utils.write_file (dir ^ "/jbuild") output_str
@@ -185,7 +192,7 @@ let build_exec dir =
   Sys.command cmd |> ignore
 
 let postprocess dir name =
-  let cmd = Printf.sprintf "(cd %s; docker build -t %s)" dir name in
+  let cmd = Printf.sprintf "(cd %s; docker build -t %s .)" dir name in
   Sys.command cmd |> ignore
 
 end
