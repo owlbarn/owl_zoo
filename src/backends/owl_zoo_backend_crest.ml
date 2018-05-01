@@ -160,7 +160,7 @@ let generate_dockerfile dir gist  =
 
   COPY * /home/opam/service/
   RUN sudo chown opam:opam /home/opam/service/*
-  RUN jbuilder build server.bc; exit 0
+  RUN jbuilder build server.bc; exit 0 #FIXME
   RUN jbuilder build server.bc
   ENTRYPOINT [\"_build/default/server.bc\"]
   "
