@@ -12,7 +12,7 @@ open Owl_zoo_backend
 (* assumes no file name collision among different gists and no subdir *)
 
 let rec extract_zoo_gist f added dir =
-  let s = Owl_utils.read_file_string f in
+  let s = Owl_io.read_file_string f in
   let regex = Str.regexp "^#zoo \"\\([0-9A-Za-z]+\\)\"" in
   try
     let pos = ref 0 in

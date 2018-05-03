@@ -137,7 +137,7 @@ let server =
 let () = ignore (Lwt_main.run server)
 "
   in
-  Owl_utils.write_file (dir ^ "/server.ml") output_string
+  Owl_io.write_file (dir ^ "/server.ml") output_string
 
 
 let generate_dockerfile dir gist  =
@@ -165,7 +165,7 @@ let generate_dockerfile dir gist  =
   ENTRYPOINT [\"_build/default/server.bc\"]
   "
   in
-  Owl_utils.write_file (dir ^ "/Dockerfile") output_str
+  Owl_io.write_file (dir ^ "/Dockerfile") output_str
 
 let generate_jbuild dir =
   let output_str = "
@@ -176,7 +176,7 @@ let generate_jbuild dir =
     (libraries (owl owl-zoo owl_newt lwt cohttp.lwt cohttp-lwt-unix))))
   "
   in
-  Owl_utils.write_file (dir ^ "/jbuild") output_str
+  Owl_io.write_file (dir ^ "/jbuild") output_str
 
 let preprocess dir =
   let cmd = Printf.sprintf "find %s -name \"*.ml\" -exec sed -i '/^#/d' {} \\; " dir in

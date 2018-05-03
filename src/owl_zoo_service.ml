@@ -135,14 +135,14 @@ let generate_main ?(dir=".") service mname =
     (Printf.sprintf "let main %s =\n%s" p_str !body) in
 
   let dir = if dir = "." then Sys.getcwd () else dir in
-  Owl_utils.write_file (dir ^ "/" ^ mname ^ ".ml") output_string
+  Owl_io.write_file (dir ^ "/" ^ mname ^ ".ml") output_string
 
 
 let save_service service name =
   let tmp_dir = Owl_zoo_utils.mk_temp_dir "service" in
   generate_main ~dir:tmp_dir service name;
   generate_conf ~dir:tmp_dir service name;
-  Owl_utils.write_file (tmp_dir ^ "/#readme.md") name;
+  Owl_io.write_file (tmp_dir ^ "/#readme.md") name;
   let gist = Owl_zoo_cmd.upload_gist tmp_dir in
   gist
 
